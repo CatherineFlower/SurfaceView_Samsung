@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -81,27 +82,58 @@ public class CustomSurfaceView extends SurfaceView implements SurfaceHolder.Call
 
         @Override
         public void run() {
+            boolean cx = false, cy = false;
             while (!isInterrupted()) {
-                update();
-                draw();
+                if (holder.getSurface().isValid()) {
+                    Canvas canvas = holder.lockCanvas();
+                    if(point.x >= canvas.getWidth()) {
+                        cx = true;
+                        Log.i("CX", "Changed - true");
+                    }
+                    else if(point.x <= 0) {
+                        cx = false;
+                        Log.i("CX", "Changed - false");
+                    }
+                    if(point.y >= canvas.getHeight()) {
+                        cy = true;
+                        Log.i("CY", "Changed - true");
+                    }
+                    else if(point.y <= 0) {
+                        cy = false;
+                        Log.i("CY", "Changed - false");
+                    }
+                    update(cx, cy);
+                    canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+                    canvas.drawCircle(point.x, point.y, 100, paint);
+                    holder.unlockCanvasAndPost(canvas);
+                }
+
+//                draw(cx, cy);
                 control();
             }
         }
 
-        private void update() {
-            int x = point.x + 10;
-            int y = point.y + 10;
+        private void update(boolean cx, boolean cy) {
+            int x, y;
+            if(!cx) {
+                x = point.x + 10;
+            }
+            else {
+                x = point.x - 10;
+            }
+            if(!cy) {
+                y = point.y + 10;
+            }
+            else {
+                y = point.y - 10;
+            }
+
             point.set(x, y);
         }
 
-        private void draw() {
-            if (holder.getSurface().isValid()) {
-                Canvas canvas = holder.lockCanvas();
-                canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-                canvas.drawCircle(point.x, point.y, 100, paint);
-                holder.unlockCanvasAndPost(canvas);
-            }
-        }
+//        private void draw(boolean cx, boolean cy) {
+//
+//        }
 
         private void control() {
             try {
